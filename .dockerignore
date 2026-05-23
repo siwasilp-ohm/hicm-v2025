@@ -1,0 +1,53 @@
+# ── Git ───────────────────────────────────────────────────
+.git
+.gitignore
+
+# ── Python virtual environment ────────────────────────────
+.venv
+
+# ── Environment files (use .env.example as template) ─────
+.env
+
+# ── Dev/debug scripts (not needed in production image) ───
+scripts/
+bin/
+tests/
+
+# ── Temporary & debug files in root ──────────────────────
+check_*.php
+debug_*.php
+fix_avatar_ext.php
+setup_*.php
+test-auto-save.php
+add_category_to_manual.php
+
+# ── Backup files ──────────────────────────────────────────
+pages/*.backup.php
+pages/*\ -\ backup.php
+pages/*\ -\ old.php
+pages/*\ -\ ver_*.php
+assets/js/*.backup.js
+
+# ── Excel/data files (source data, not needed at runtime) ─
+*.xlsx
+aud_data.xlsx
+company_data.xlsx
+A_*.xlsx
+B_*.xlsx
+
+# ── Documentation files ───────────────────────────────────
+*.md
+COMPLETION_SUMMARY.md
+DEMO_*.md
+
+# ── OS artifacts ──────────────────────────────────────────
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ── Docker meta files (ไม่จำเป็นใน web root) ────────────────
+docker-compose.yml
+.dockerignore
+DOCKER_GUIDE.txt
+.env.example
+# หมายเหตุ: docker/ และ Dockerfile ต้องอยู่ใน build context

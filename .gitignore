@@ -1,0 +1,76 @@
+# ── Secrets & Environment ─────────────────────────────────────
+.env
+.env.local
+.env.*.local
+/root/.hicm_mysql_root
+
+# ── User Uploads (runtime data, not part of source) ───────────
+assets/uploads/avatars/*
+assets/uploads/manual_refs/*
+assets/uploads/2025/*
+assets/uploads/2026/*
+assets/uploads/2027/*
+assets/uploads/2028/*
+# คง .gitkeep ไว้เพื่อให้ git track โฟลเดอร์
+!assets/uploads/**/.gitkeep
+
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS & Editor ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── PHP ───────────────────────────────────────────────────────
+vendor/
+composer.lock
+
+# ── Temp / Cache ──────────────────────────────────────────────
+/tmp/
+*.tmp
+*.cache
+
+# ── PHP Info (ไฟล์ debug ชั่วคราว) ───────────────────────────
+phpinfo.php
+test.php
+info.php
+
+# ── Binary / Data files (ไม่ใช่ source code) ─────────────────
+*.zip
+*.xlsx
+*.xls
+*.sql
+!database/*.sql
+
+# ── Database dumps (production data) ─────────────────────────
+hicm_v2025*.sql
+*backup*.sql
+*dump*.sql
+
+# ── Claude Code local settings ────────────────────────────────
+.claude/settings.local.json
+
+# ── Debug / temp scripts ──────────────────────────────────────
+scripts/debug_*.txt
+scripts/debug_*.json
+scripts/auditor_list.txt
+add_category_to_manual.php
+
+# ── Dev / analysis documents ─────────────────────────────────
+FINAL_REPORT.txt
+COMPLETION_SUMMARY.md
+DEMO_ASSESSMENT_FLOW.md
+DEMO_CLEANUP_COMPLETE.md
+DEMO_SETUP_GUIDE.md
+DOCKER_GUIDE.txt
+FACTORY_ASSESSMENT_API.txt
+INTEGRATION_GUIDE.md
+VERIFICATION_REPORT.md
+UI_IMPROVEMENTS.md

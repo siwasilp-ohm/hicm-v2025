@@ -1,0 +1,97 @@
+# ============================================================
+#  HICM V2025 Assessment System — Docker Compose
+#  Services: app (PHP+Apache) | db (MariaDB) | phpmyadmin
+# ============================================================
+
+services:
+
+  # ── Application (PHP 8.2 + Apache) ─────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hicm_app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      APP_URL: "http://localhost:${APP_PORT:-8080}"
+      APP_PORT: "${APP_PORT:-8080}"
+      DB_HOST: db
+      DB_NAME: "${DB_NAME:-hicm_v2025}"
+      DB_USERNAME: "${DB_USERNAME:-root}"
+      DB_PASSWORD: "${DB_PASSWORD:-hicm_secret}"
+    volumes:
+      - uploads_data:/var/www/html/assets/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - hicm_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/index.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ── Database (MariaDB 10.4 — matches XAMPP dev environment) ────────────────
+  db:
+    image: mariadb:10.4
+    container_name: hicm_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-hicm_secret}"
+      MYSQL_DATABASE: "${DB_NAME:-hicm_v2025}"
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./hicm_v2025 - 240429.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    networks:
+      - hicm_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-hicm_secret}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=256M
+      --max-allowed-packet=64M
+
+  # ── phpMyAdmin ──────────────────────────────────────────────────────────────
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: hicm_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "${PMA_PORT:-8081}:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: "${DB_PASSWORD:-hicm_secret}"
+      UPLOAD_LIMIT: 64M
+      MEMORY_LIMIT: 256M
+      MAX_EXECUTION_TIME: 300
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - hicm_network
+
+# ── Volumes ─────────────────────────────────────────────────────────────────
+volumes:
+  db_data:
+    driver: local
+  uploads_data:
+    driver: local
+
+# ── Networks ─────────────────────────────────────────────────────────────────
+networks:
+  hicm_network:
+    driver: bridge

@@ -1,0 +1,5 @@
+# Prevent script execution
+<FilesMatch "\.(php|php5|phtml|html|htm|js)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
