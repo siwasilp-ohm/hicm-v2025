@@ -44,6 +44,8 @@ info.php
 
 # ── Binary / Data files (ไม่ใช่ source code) ─────────────────
 *.zip
+*.tar.gz
+*.tar
 *.xlsx
 *.xls
 *.sql
