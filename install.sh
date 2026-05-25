@@ -39,12 +39,25 @@ echo -e "  ━━━━━━━━━━━━━━━━━━━━━━━
 [[ $EUID -ne 0 ]] && error "กรุณารันด้วย sudo: sudo bash install.sh"
 grep -qi "ubuntu" /etc/os-release 2>/dev/null || warn "ไม่ใช่ Ubuntu — อาจเกิดปัญหา"
 
+# ── Bootstrap: ถ้ารันแบบ standalone (wget แล้วรัน) ให้ clone repo ก่อน ────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GITHUB_REPO="https://github.com/siwasilp-ohm/hicm-v2025.git"
+
+if [[ ! -f "${SCRIPT_DIR}/database/schema.sql" ]]; then
+    info "ไม่พบไฟล์โปรเจค — กำลัง clone จาก GitHub..."
+    apt-get install -y -qq git > /dev/null 2>&1
+    CLONE_DIR="/tmp/hicm-v2025-src"
+    rm -rf "$CLONE_DIR"
+    git clone --depth=1 "$GITHUB_REPO" "$CLONE_DIR" \
+        || error "Clone ไม่สำเร็จ — ตรวจสอบการเชื่อมต่อ internet"
+    success "Clone เสร็จแล้ว"
+    exec sudo bash "${CLONE_DIR}/install.sh"
+fi
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  SECTION 0: รับค่าจากผู้ใช้
 # ─────────────────────────────────────────────────────────────────────────────
 step "กำหนดค่าการติดตั้ง"
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 ask "📁 โฟลเดอร์ปลายทาง (Enter = /var/www/hicm-v2025):"
 read -r INPUT_WEBROOT
