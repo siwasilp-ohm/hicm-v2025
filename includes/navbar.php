@@ -319,7 +319,7 @@ $userRoleLabel = $roleLabels[$user['role']] ?? $user['role'];
         
         <!-- Center: Brand Logo + Title -->
         <a href="<?php echo getBaseUrl(); ?>/pages/dashboard.php" class="navbar-brand hicm-brand-wrapper" style="position: absolute; left: 50%; transform: translateX(-50%);">
-            <img src="<?php echo getBaseUrl(); ?>/assets/uploads/avatars/master.png" alt="HICM" class="hicm-brand-logo">
+            <img src="<?php echo getBaseUrl(); ?>/assets/icon/master.png" alt="HICM" class="hicm-brand-logo">
             <span class="hicm-brand-title">โครงการการพัฒนาโมเดลชุมชนอุตสาหกรรมสุขภาวะเพื่อการเสริมสร้างสุขภาพคนวัยทำงานแบบบูรณาการและยั่งยืน (HICM)</span>
         </a>
         

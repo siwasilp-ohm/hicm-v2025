@@ -63,7 +63,7 @@ function getVal($key, $default = '') {
     <header class="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="/hicm-v2025/assets/uploads/avatars/suth.png" alt="Logo" class="h-10 w-10 object-contain">
+                <img src="<?php echo getBaseUrl(); ?>/assets/icon/suth.png" alt="Logo" class="h-10 w-10 object-contain">
                 <div>
                     <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">HICM V2025</h1>
                     <p class="text-[10px] text-slate-500 uppercase tracking-wider">Health Industrial Community Model</p>
@@ -87,7 +87,7 @@ function getVal($key, $default = '') {
                     </p>
                     
                     <div class="relative rounded-2xl overflow-hidden shadow-xl mb-8 group border bg-white">
-                        <img src="/hicm-v2025/assets/uploads/avatars/master.png" alt="HICM Banner" class="w-full h-48 object-contain p-4 transition-transform duration-500 group-hover:scale-105">
+                        <img src="<?php echo getBaseUrl(); ?>/assets/icon/master.png" alt="HICM Banner" class="w-full h-48 object-contain p-4 transition-transform duration-500 group-hover:scale-105">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent"></div>
                     </div>
                 </div>
