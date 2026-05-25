@@ -182,12 +182,10 @@ step "3/8  ติดตั้งและตั้งค่า Apache"
 apt-get install -y -qq apache2 > /dev/null
 a2enmod rewrite deflate expires headers php8.2 > /dev/null 2>&1
 
-# ตั้งค่า Listen port — ถ้าไม่ใช่ 80 ให้แทนที่ Listen 80 เพื่อไม่ชนกับ service อื่น
+# ตั้งค่า Listen port — ลบ Listen เดิมทั้งหมดแล้วใส่ใหม่แค่ครั้งเดียว
 if [[ "$APP_PORT" != "80" ]]; then
-    sed -i "s/^Listen 80$/Listen ${APP_PORT}/" /etc/apache2/ports.conf
-    if ! grep -q "^Listen ${APP_PORT}" /etc/apache2/ports.conf; then
-        echo "Listen ${APP_PORT}" >> /etc/apache2/ports.conf
-    fi
+    sed -i "/^Listen 80$/d; /^Listen ${APP_PORT}$/d" /etc/apache2/ports.conf
+    echo "Listen ${APP_PORT}" >> /etc/apache2/ports.conf
 fi
 
 systemctl enable apache2 --quiet
