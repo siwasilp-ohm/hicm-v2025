@@ -1,6 +1,9 @@
 # ============================================================
 #  HICM V2025 Assessment System — Docker Compose
 #  Services: app (PHP+Apache) | db (MariaDB) | phpmyadmin
+#
+#  Copy .env.example → .env and adjust ports before running:
+#    docker compose up -d
 # ============================================================
 
 services:
@@ -33,9 +36,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 30s
 
-  # ── Database (MariaDB 10.4 — matches XAMPP dev environment) ────────────────
+  # ── Database (MariaDB 10.4) ─────────────────────────────────────────────────
   db:
     image: mariadb:10.4
     container_name: hicm_db
@@ -47,9 +50,11 @@ services:
       MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
     volumes:
       - db_data:/var/lib/mysql
-      - ./hicm_v2025 - 240429.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/insert_indicators.sql:/docker-entrypoint-initdb.d/02_indicators.sql:ro
+      - ./database/sample_users.sql:/docker-entrypoint-initdb.d/03_sample_users.sql:ro
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - "${DB_PORT:-3307}:3306"
     networks:
       - hicm_network
     healthcheck:
