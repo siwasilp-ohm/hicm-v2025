@@ -128,7 +128,7 @@ step "2/8  ติดตั้ง PHP 8.2 และ Extensions"
 
 if ! grep -rq "ondrej/php" /etc/apt/sources.list.d/ 2>/dev/null; then
     info "เพิ่ม Ondrej PHP PPA..."
-    add-apt-repository ppa:ondrej/php -y -q > /dev/null 2>&1
+    add-apt-repository ppa:ondrej/php -y > /dev/null 2>&1 || true
     apt-get update -qq
 fi
 
