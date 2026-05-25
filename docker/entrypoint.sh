@@ -40,7 +40,8 @@ TABLE_COUNT=$(mysql $MYSQL_OPTS \
 
 if [ "$TABLE_COUNT" -lt "5" ]; then
     echo "  → Database is empty. Importing initial data..."
-    mysql $MYSQL_OPTS "${DB_NAME:-hicm_v2025}" < /docker-entrypoint-initdb.d/init.sql
+    mysql $MYSQL_OPTS "${DB_NAME:-hicm_v2025}" < /var/www/html/database/schema.sql
+    mysql $MYSQL_OPTS "${DB_NAME:-hicm_v2025}" < /var/www/html/database/insert_indicators.sql
     echo "  ✓ Database imported successfully."
 else
     echo "  ✓ Database already has data ($TABLE_COUNT tables). Skipping import."
