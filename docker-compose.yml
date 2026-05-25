@@ -18,7 +18,7 @@ services:
     ports:
       - "${APP_PORT:-8080}:80"
     environment:
-      APP_URL: "http://localhost:${APP_PORT:-8080}"
+      APP_URL: "${APP_URL:-http://localhost:8080}"
       APP_PORT: "${APP_PORT:-8080}"
       DB_HOST: db
       DB_NAME: "${DB_NAME:-hicm_v2025}"
@@ -31,6 +31,7 @@ services:
         condition: service_healthy
     networks:
       - hicm_network
+      - hicm_frontend
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/index.php"]
       interval: 30s
@@ -100,3 +101,6 @@ volumes:
 networks:
   hicm_network:
     driver: bridge
+  hicm_frontend:
+    external: true
+    name: hicm-application_default
