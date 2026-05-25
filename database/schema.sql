@@ -309,8 +309,8 @@ CREATE TABLE settings (
 -- ============================================
 
 -- Insert Admin User (password: admin123)
-INSERT INTO users (email, password_hash, name, role, is_active) VALUES
-('admin@hicm.gov.th', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ผู้ดูแลระบบ', 'admin', TRUE);
+INSERT INTO users (username, email, password_hash, name, role, is_active) VALUES
+('admin', 'admin@hicm.gov.th', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ผู้ดูแลระบบ', 'admin', TRUE);
 
 -- Insert Pillars
 INSERT INTO pillars (code, name_th, name_en, description, weight, indicators_count, color, icon, display_order) VALUES
