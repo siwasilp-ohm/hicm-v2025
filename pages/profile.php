@@ -811,7 +811,7 @@ function getAvatarDisplay($avatar, $name) {
                                             <?php if ($option['type'] === 'initials'): ?>
                                                 <?php echo mb_substr($userData['name'], 0, 1, 'UTF-8'); ?>
                                             <?php else: ?>
-                                                <img src="<?php echo getUploadUrl() . 'avatars/' . $option['value']; ?>" alt="<?php echo $option['label']; ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                                <img src="<?php echo getAvatarUrl($option['value']); ?>" alt="<?php echo $option['label']; ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                             <?php endif; ?>
                                         </div>
                                         <span class="avatar-label"><?php echo $option['label']; ?></span>

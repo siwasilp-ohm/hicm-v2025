@@ -116,6 +116,16 @@ function getUploadUrl() {
     return APP_URL . '/assets/uploads/';
 }
 
+define('AVATAR_PRESETS', ['avatar1.png','avatar2.png','avatar3.png','avatar4.png','avatar5.png','avatar6.png','avatar7.png']);
+
+function getAvatarUrl($filename) {
+    if (empty($filename) || $filename === 'default') return '';
+    if (in_array($filename, AVATAR_PRESETS)) {
+        return getBaseUrl() . '/assets/icon/' . $filename;
+    }
+    return getUploadUrl() . 'avatars/' . $filename;
+}
+
 function formatDate($date, $format = 'd/m/Y') {
     return date($format, strtotime($date));
 }

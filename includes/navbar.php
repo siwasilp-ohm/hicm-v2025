@@ -244,9 +244,11 @@ $userRoleLabel = $roleLabels[$user['role']] ?? $user['role'];
             <div class="desktop-user-section navbar-user-profile" onclick="toggleUserDropdown(event)">
                 <div class="navbar-user-avatar">
                     <?php
-                    $avatarFile = APP_UPLOAD_PATH . 'avatars/' . ($user['avatar'] ?? '');
-                    if (!empty($user['avatar']) && $user['avatar'] !== 'default' && strpos($user['avatar'], 'avatar') === 0 && file_exists($avatarFile)) {
-                        echo '<img src="' . getUploadUrl() . 'avatars/' . $user['avatar'] . '" alt="Avatar">';
+                    $avatar = $user['avatar'] ?? '';
+                    $hasAvatar = !empty($avatar) && $avatar !== 'default' &&
+                                 (in_array($avatar, AVATAR_PRESETS) || file_exists(APP_UPLOAD_PATH . 'avatars/' . $avatar));
+                    if ($hasAvatar) {
+                        echo '<img src="' . getAvatarUrl($avatar) . '" alt="Avatar">';
                     } else {
                         echo mb_substr($user['name'], 0, 1, 'UTF-8');
                     }
@@ -384,9 +386,11 @@ $userRoleLabel = $roleLabels[$user['role']] ?? $user['role'];
             <div class="mobile-user-section navbar-user-profile" style="display: none;" onclick="toggleUserDropdownMobile(event)">
                 <div class="navbar-user-avatar">
                     <?php
-                    $avatarFile = APP_UPLOAD_PATH . 'avatars/' . ($user['avatar'] ?? '');
-                    if (!empty($user['avatar']) && $user['avatar'] !== 'default' && strpos($user['avatar'], 'avatar') === 0 && file_exists($avatarFile)) {
-                        echo '<img src="' . getUploadUrl() . 'avatars/' . $user['avatar'] . '" alt="Avatar">';
+                    $avatar = $user['avatar'] ?? '';
+                    $hasAvatar = !empty($avatar) && $avatar !== 'default' &&
+                                 (in_array($avatar, AVATAR_PRESETS) || file_exists(APP_UPLOAD_PATH . 'avatars/' . $avatar));
+                    if ($hasAvatar) {
+                        echo '<img src="' . getAvatarUrl($avatar) . '" alt="Avatar">';
                     } else {
                         echo mb_substr($user['name'], 0, 1, 'UTF-8');
                     }
