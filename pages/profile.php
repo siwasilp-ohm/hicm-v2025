@@ -191,8 +191,9 @@ function getAvatarDisplay($avatar, $name) {
         return mb_substr($name, 0, 1, 'UTF-8');
     }
 
-    if (strpos($avatar, 'avatar') === 0 && file_exists(APP_UPLOAD_PATH . 'avatars/' . $avatar)) {
-        return '<img src="' . getUploadUrl() . 'avatars/' . $avatar . '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+    $hasAvatar = in_array($avatar, AVATAR_PRESETS) || file_exists(APP_UPLOAD_PATH . 'avatars/' . $avatar);
+    if ($hasAvatar) {
+        return '<img src="' . getAvatarUrl($avatar) . '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
     }
 
     return mb_substr($name, 0, 1, 'UTF-8');
