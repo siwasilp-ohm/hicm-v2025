@@ -1,0 +1,231 @@
+================================================================================
+  HICM V2025 — คู่มือติดตั้งบน Production Server (Docker)
+  สำหรับนักพัฒนาที่ต้องการต่องานหรือ deploy ใหม่
+  อัพเดต: พฤษภาคม 2026
+================================================================================
+
+ภาพรวม
+-------
+ระบบนี้รันด้วย Docker Compose ประกอบด้วย 2 container หลัก
+  - hicm_app   : PHP 8.2 + Apache (source code ทั้งหมด)
+  - hicm_db    : MariaDB 10.6 (ฐานข้อมูล)
+
+URL production : https://hicm.sut.ac.th/assessment
+Sub-path       : /assessment/ (proxied จาก nginx frontdoor)
+
+================================================================================
+ส่วนที่ 1 : สิ่งที่ต้องมีก่อน
+================================================================================
+
+1.1 Software ที่ต้องติดตั้งบน server
+  - Docker Engine 24+       : https://docs.docker.com/engine/install/ubuntu/
+  - Docker Compose Plugin   : ติดมากับ Docker Desktop หรือ `apt install docker-compose-plugin`
+  - git
+
+1.2 ตรวจสอบก่อน deploy
+  - Server เปิด port ที่กำหนดใน .env ได้ (default APP_PORT=8080)
+  - User ที่รันต้องอยู่ใน group docker: `sudo usermod -aG docker $USER`
+  - ถ้ามี nginx frontdoor อยู่แล้ว ต้องรู้ชื่อ Docker network ของมัน
+
+================================================================================
+ส่วนที่ 2 : ติดตั้งครั้งแรก
+================================================================================
+
+ขั้นตอนที่ 1 — Clone repository
+--------------------------------
+  cd ~
+  git clone https://github.com/siwasilp-ohm/hicm-v2025.git
+  cd hicm-v2025
+
+ขั้นตอนที่ 2 — สร้างไฟล์ .env
+-------------------------------
+  cp .env.example .env
+  nano .env
+
+  แก้ค่าที่สำคัญ:
+
+  APP_URL=https://hicm.sut.ac.th/assessment   <-- URL จริงที่ user เข้าถึง (ไม่มี trailing slash)
+  APP_PORT=8080                                <-- port ที่ hicm_app expose ออกมา
+  DB_PASSWORD=hicm_secret                      <-- เปลี่ยนเป็น password ที่ปลอดภัยกว่านี้
+  DB_PORT=3307                                 <-- เปลี่ยนถ้า 3307 ชนกับ service อื่น
+
+  ** APP_URL สำคัญมาก ถ้าผิดทุก link ในระบบจะพังทั้งหมด **
+
+ขั้นตอนที่ 3 — เชื่อมต่อ nginx frontdoor network (ถ้ามี reverse proxy)
+-----------------------------------------------------------------------
+  ดูชื่อ network ของ nginx frontdoor:
+    docker network ls
+
+  แก้ docker-compose.yml ส่วน networks ให้ตรงกับชื่อจริง:
+
+    networks:
+      hicm_frontend:
+        external: true
+        name: <ชื่อ network ของ nginx frontdoor>   <-- แก้ตรงนี้
+
+  ถ้าไม่มี nginx frontdoor (standalone):
+    ลบ section hicm_frontend ออก และแก้ ports ของ app เป็น "80:80"
+
+ขั้นตอนที่ 4 — Build และ Start containers
+-----------------------------------------
+  docker compose up -d --build
+
+  รอ 1-2 นาที แล้วเช็ค:
+    docker compose ps
+
+  ทุก container ต้องแสดงสถานะ "running" หรือ "Up"
+
+ขั้นตอนที่ 5 — Import ฐานข้อมูล
+---------------------------------
+  ไฟล์ database/full_240429.sql คือ full dump ที่มีข้อมูลจริง
+
+  5a. ถ้าเป็น fresh install (DB ว่างเปล่า):
+      ไม่ต้องทำอะไร — MariaDB จะรัน schema.sql และ insert_indicators.sql อัตโนมัติ
+      เมื่อ container เริ่มต้นครั้งแรก
+
+  5b. ถ้าต้องการ import full dump (มีข้อมูล users, logs ฯลฯ):
+      -- ลบ DB เดิมก่อน (ข้อมูลเดิมหายทั้งหมด)
+      docker exec hicm_db mysql -uroot -p${DB_PASSWORD} \
+        -e "DROP DATABASE hicm_v2025; CREATE DATABASE hicm_v2025 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+      -- Import
+      docker exec -i hicm_db mysql -uroot -p${DB_PASSWORD} hicm_v2025 \
+        < ./database/full_240429.sql
+
+  ตรวจสอบว่า import สำเร็จ:
+      docker exec hicm_db mysql -uroot -p${DB_PASSWORD} hicm_v2025 \
+        -e "SHOW TABLES;"
+
+================================================================================
+ส่วนที่ 3 : ตั้งค่า nginx frontdoor
+================================================================================
+
+  (ทำเฉพาะกรณีที่มี nginx reverse proxy อยู่หน้า — เช่น hicm.sut.ac.th)
+
+  3.1 เพิ่ม location block สำหรับ /assessment/
+  ----------------------------------------------
+  ดู container name ของ nginx:
+    docker ps | grep frontdoor
+
+  เขียน config ใหม่ (แทนที่ด้วยคำสั่ง docker exec):
+    docker exec -i <nginx_container> sh -c 'cat > /etc/nginx/conf.d/default.conf' << 'NGINX_EOF'
+    ... (ดู template ใน docker/setup-nginx.sh)
+    NGINX_EOF
+
+  Location block ที่ต้องมี:
+    location = /assessment {
+        return 301 https://hicm.sut.ac.th/assessment/;
+    }
+    location /assessment/ {
+        proxy_pass         http://hicm_app/;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300;
+    }
+
+  ** proxy_pass ต้องมี trailing slash (http://hicm_app/) เพื่อ strip prefix /assessment/ **
+
+  3.2 แก้ Service Worker ของระบบเก่า (ถ้ามี SPA อยู่ที่ / ของ domain เดียวกัน)
+  -------------------------------------------------------------------------------
+  ปัญหา: SPA ที่ / อาจมี Service Worker scope "/" ที่ดัก request ทุกอย่างรวมถึง /assessment/
+
+  แก้โดยเพิ่ม location = /sw.js ใน nginx เพื่อ inject denylist:
+    location = /sw.js {
+        proxy_pass         http://frontend/sw.js;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   Accept-Encoding   "";
+        sub_filter         'e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("index.html")))' 'e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("index.html"),{denylist:[/^\/assessment/]}))';
+        sub_filter_once    on;
+        sub_filter_types   application/javascript text/javascript;
+        add_header         Cache-Control "no-cache, no-store, must-revalidate";
+        add_header         Service-Worker-Allowed "/";
+    }
+
+  หลัง reload nginx ผู้ใช้ทุกคนจะได้ SW ที่อัพเดตแล้วภายใน 24 ชั่วโมง
+
+  3.3 Test และ Reload nginx
+    docker exec <nginx_container> nginx -t
+    docker exec <nginx_container> nginx -s reload
+
+================================================================================
+ส่วนที่ 4 : อัพเดต (เมื่อมี code ใหม่จาก GitHub)
+================================================================================
+
+  cd ~/hicm-v2025
+  git pull
+  docker compose up -d --build app
+
+  ** ใช้ --build เสมอ เพราะ PHP source อยู่ใน Docker image ไม่ใช่ volume mount **
+  ** restart อย่างเดียวไม่พอ ต้อง build ใหม่ **
+
+================================================================================
+ส่วนที่ 5 : Troubleshooting
+================================================================================
+
+ปัญหา: เปิดเว็บแล้ว redirect ไป http://localhost:8080/
+  สาเหตุ : ไม่มีไฟล์ .env หรือ APP_URL ผิด
+  แก้    : สร้าง/แก้ .env → APP_URL=https://hicm.sut.ac.th/assessment
+           จากนั้น: docker compose up -d --build app
+
+ปัญหา: เว็บ redirect ไปที่ระบบเก่า /login
+  สาเหตุ : Service Worker ของระบบเก่าดัก request ทั้งหมด
+  แก้    : ผู้ใช้ชั่วคราว: เปิด DevTools > Application > Service Workers > Unregister
+           แก้ถาวร: ทำตามข้อ 3.2 (inject denylist ผ่าน nginx sub_filter)
+
+ปัญหา: รูป avatar 404
+  สาเหตุ : assets/uploads/ เป็น Docker volume ไม่มีไฟล์ preset
+  แก้    : preset avatars (avatar1-7.png) อยู่ใน assets/icon/ ใน image แล้ว
+           ถ้ายังเจอ 404 แสดงว่า build image ไม่ได้รัน → docker compose up -d --build app
+
+ปัญหา: "Table already exists" ตอน import SQL
+  สาเหตุ : DB มี schema อยู่แล้วจากการ init ครั้งแรก
+  แก้    : DROP DATABASE ก่อน แล้ว import ใหม่ (ดูขั้นตอนที่ 5b)
+
+ปัญหา: hicm_app ไม่ start — "address already in use"
+  สาเหตุ : APP_PORT ชนกับ service อื่น
+  แก้    : เปลี่ยน APP_PORT ใน .env เป็น port ว่าง เช่น 8082
+           และแก้ nginx proxy_pass ให้ชี้มาที่ hicm_app (ใช้ชื่อ container ไม่ใช่ port)
+
+ปัญหา: docker compose up ติด dependency db failed
+  สาเหตุ : DB_PORT ชนกับ MySQL/MariaDB ตัวอื่นที่รันอยู่
+  แก้    : เปลี่ยน DB_PORT ใน .env (เช่น 3308)
+
+================================================================================
+ส่วนที่ 6 : โครงสร้างไฟล์สำคัญ
+================================================================================
+
+  .env                      ← config ของ server (ไม่อยู่ใน git ต้องสร้างเอง)
+  .env.example              ← template ของ .env
+  docker-compose.yml        ← กำหนด containers, networks, volumes
+  docker/Dockerfile         ← build image ของ hicm_app
+  docker/entrypoint.sh      ← script รันตอน container start
+  config/config.php         ← PHP config อ่าน APP_URL จาก env
+  database/schema.sql       ← โครงสร้าง DB (auto-run ตอน init)
+  database/insert_indicators.sql ← ข้อมูล indicator (auto-run ตอน init)
+  database/full_240429.sql  ← full dump สำหรับ import ด้วยมือ
+  assets/icon/              ← รูป static ที่ต้องอยู่ใน git (avatars, logos)
+  assets/uploads/           ← ไฟล์ที่ user upload (Docker volume, ไม่อยู่ใน git)
+
+================================================================================
+ส่วนที่ 7 : User เริ่มต้น (หลัง import full_240429.sql)
+================================================================================
+
+  ดู users ในระบบ:
+    docker exec hicm_db mysql -uroot -p${DB_PASSWORD} hicm_v2025 \
+      -e "SELECT id, username, email, role FROM users;"
+
+  ถ้าลืม password สามารถ reset ผ่าน phpMyAdmin:
+    เปิด http://<server_ip>:8081  (PMA_PORT จาก .env)
+    table: users → แก้ password_hash ด้วย PHP bcrypt hash ใหม่
+
+================================================================================
+ติดต่อผู้พัฒนา
+================================================================================
+  Repository : https://github.com/siwasilp-ohm/hicm-v2025
+  Email      : ohm.siwasilp@gmail.com
+
+================================================================================
