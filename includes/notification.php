@@ -175,6 +175,21 @@ function dismissNotification($notificationId, $userId) {
 }
 
 /**
+ * Clear (delete) ALL notifications across every user — admin only
+ */
+function clearAllUsersNotifications() {
+    try {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("DELETE FROM notifications");
+        $stmt->execute();
+        return $stmt->rowCount();
+    } catch (Exception $e) {
+        error_log("Error clearing all users notifications: " . $e->getMessage());
+        return 0;
+    }
+}
+
+/**
  * Clear (delete) all notifications for a user — for both user self-clear and admin override
  */
 function clearAllNotificationsForUser($userId) {

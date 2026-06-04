@@ -66,6 +66,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['error' => 'Forbidden']);
             }
             break;
+
+        case 'admin_clear_all_users':
+            if (hasRole('admin')) {
+                $count = clearAllUsersNotifications();
+                echo json_encode(['success' => true, 'deleted' => $count]);
+            } else {
+                http_response_code(403);
+                echo json_encode(['error' => 'Forbidden']);
+            }
+            break;
         
         // Admin/System actions
         case 'notify_period_open':

@@ -648,10 +648,21 @@ $companySizes = getCompanySizes();
                     <h1 class="report-title">จัดการผู้ใช้งาน</h1>
                     <p class="report-meta">สร้าง แก้ไข และจัดการบัญชีผู้ใช้ทั้งหมดในระบบ HICM V2025</p>
                 </div>
-                <button class="btn btn-plus px-4 py-2 d-flex align-items-center gap-2" onclick="openModal('createUserModal')">
-                    <i class="fas fa-plus"></i>
-                    <span>เพิ่มผู้ใช้ใหม่</span>
-                </button>
+                <div class="d-flex align-items-center gap-2" style="flex-wrap:wrap;">
+                    <button class="btn px-4 py-2 d-flex align-items-center gap-2" onclick="openAcaModal()"
+                        style="background:#fee2e2;color:#dc2626;border:1.5px solid #fca5a5;font-weight:600;border-radius:10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                            <line x1="2" y1="2" x2="22" y2="22"/>
+                        </svg>
+                        <span>ล้างการแจ้งเตือน User ทั้งหมด</span>
+                    </button>
+                    <button class="btn btn-plus px-4 py-2 d-flex align-items-center gap-2" onclick="openModal('createUserModal')">
+                        <i class="fas fa-plus"></i>
+                        <span>เพิ่มผู้ใช้ใหม่</span>
+                    </button>
+                </div>
             </div>
             
             <?php if ($success): ?>
@@ -1383,24 +1394,103 @@ $companySizes = getCompanySizes();
             openModal('deleteModal');
         }
 
+        // ===== Admin Clear Notifications =====
+        let _acuUserId = null;
+
         function adminClearNotifications(userId, userName) {
-            if (!confirm(`ล้างการแจ้งเตือนทั้งหมดของ "${userName}"?\n\nการแจ้งเตือนทั้งหมดของผู้ใช้นี้จะถูกลบออกถาวร`)) return;
+            _acuUserId = userId;
+            document.getElementById('acuUserName').textContent = `"${userName}"`;
+            document.getElementById('acuOverlay').classList.add('show');
+        }
+
+        function closeAcuModal(event) {
+            if (event && event.target !== document.getElementById('acuOverlay')) return;
+            document.getElementById('acuOverlay').classList.remove('show');
+        }
+
+        function executeAcuClear() {
+            if (!_acuUserId) return;
+            const btn = document.getElementById('acuConfirmBtn');
+            btn.classList.add('loading');
+            btn.innerHTML = '<span class="acm-spinner"></span> กำลังล้าง...';
             fetch(window.APP_CONFIG.apiUrl + '/notifications.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'admin_clear_user', user_id: userId })
+                body: JSON.stringify({ action: 'admin_clear_user', user_id: _acuUserId })
             })
             .then(r => r.json())
             .then(d => {
+                document.getElementById('acuOverlay').classList.remove('show');
+                btn.classList.remove('loading');
+                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg> ล้างทั้งหมด`;
                 if (d.success) {
-                    const deleted = d.deleted ?? 0;
-                    alert(`ล้างการแจ้งเตือนของ "${userName}" เรียบร้อย\n(ลบ ${deleted} รายการ)`);
+                    showAdminToast('✅', `ล้างการแจ้งเตือนเรียบร้อย (${d.deleted ?? 0} รายการ)`);
                 } else {
-                    alert('เกิดข้อผิดพลาด: ' + (d.error || 'ไม่ทราบสาเหตุ'));
+                    showAdminToast('❌', 'เกิดข้อผิดพลาด: ' + (d.error || 'ไม่ทราบสาเหตุ'));
                 }
             })
-            .catch(() => alert('เกิดข้อผิดพลาดในการเชื่อมต่อ'));
+            .catch(() => {
+                document.getElementById('acuOverlay').classList.remove('show');
+                showAdminToast('❌', 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            });
         }
+
+        function openAcaModal() {
+            document.getElementById('acaConfirmCheck').checked = false;
+            document.getElementById('acaConfirmBtn').disabled = true;
+            document.getElementById('acaOverlay').classList.add('show');
+        }
+
+        function closeAcaModal(event) {
+            if (event && event.target !== document.getElementById('acaOverlay')) return;
+            document.getElementById('acaOverlay').classList.remove('show');
+        }
+
+        function acaCheckChange() {
+            document.getElementById('acaConfirmBtn').disabled =
+                !document.getElementById('acaConfirmCheck').checked;
+        }
+
+        function executeAcaClear() {
+            const btn = document.getElementById('acaConfirmBtn');
+            btn.classList.add('loading');
+            btn.innerHTML = '<span class="acm-spinner"></span> กำลังล้าง...';
+            fetch(window.APP_CONFIG.apiUrl + '/notifications.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'admin_clear_all_users' })
+            })
+            .then(r => r.json())
+            .then(d => {
+                document.getElementById('acaOverlay').classList.remove('show');
+                btn.classList.remove('loading');
+                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg> ล้างทั้งระบบ`;
+                if (d.success) {
+                    showAdminToast('✅', `ล้างการแจ้งเตือนทั้งระบบเรียบร้อย (${d.deleted ?? 0} รายการ)`);
+                } else {
+                    showAdminToast('❌', 'เกิดข้อผิดพลาด: ' + (d.error || 'ไม่ทราบสาเหตุ'));
+                }
+            })
+            .catch(() => {
+                document.getElementById('acaOverlay').classList.remove('show');
+                showAdminToast('❌', 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            });
+        }
+
+        function showAdminToast(icon, msg) {
+            const toast = document.getElementById('adminToast');
+            document.getElementById('adminToastIcon').textContent = icon;
+            document.getElementById('adminToastMsg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.getElementById('acuOverlay')?.classList.remove('show');
+                document.getElementById('acaOverlay')?.classList.remove('show');
+            }
+        });
 
         // Edit role change listener
         document.getElementById('editUserRole').addEventListener('change', function() {
@@ -1778,5 +1868,151 @@ $companySizes = getCompanySizes();
             });
         });
     </script>
+
+<!-- ===== Admin Clear User Notifications Modal ===== -->
+<div class="acm-overlay" id="acuOverlay" onclick="closeAcuModal(event)">
+    <div class="acm-modal" role="dialog" aria-modal="true">
+        <div class="acm-icon-wrap acm-amber">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                <line x1="2" y1="2" x2="22" y2="22"/>
+            </svg>
+        </div>
+        <h3 class="acm-title">ล้างการแจ้งเตือนของ</h3>
+        <p class="acm-username" id="acuUserName">—</p>
+        <p class="acm-desc">การแจ้งเตือนทั้งหมดของผู้ใช้นี้จะถูก<strong>ลบออกถาวร</strong><br>ไม่สามารถกู้คืนได้</p>
+        <div class="acm-actions">
+            <button class="acm-btn acm-cancel" onclick="closeAcuModal()">ยกเลิก</button>
+            <button class="acm-btn acm-confirm-amber" id="acuConfirmBtn" onclick="executeAcuClear()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                    <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+                ล้างทั้งหมด
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Admin Clear ALL Users Notifications Modal ===== -->
+<div class="acm-overlay" id="acaOverlay" onclick="closeAcaModal(event)">
+    <div class="acm-modal acm-modal-danger" role="dialog" aria-modal="true">
+        <div class="acm-icon-wrap acm-red">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+        </div>
+        <h3 class="acm-title">ล้างการแจ้งเตือนทั้งระบบ?</h3>
+        <p class="acm-desc" style="margin-bottom:1.25rem;">การแจ้งเตือนของ<strong>ผู้ใช้ทุกคน</strong>ในระบบจะถูกลบออกถาวร<br>ไม่สามารถกู้คืนได้</p>
+        <label class="acm-checkbox-wrap">
+            <input type="checkbox" id="acaConfirmCheck" onchange="acaCheckChange()">
+            <span>ฉันเข้าใจว่าการกระทำนี้ไม่สามารถกู้คืนได้</span>
+        </label>
+        <div class="acm-actions">
+            <button class="acm-btn acm-cancel" onclick="closeAcaModal()">ยกเลิก</button>
+            <button class="acm-btn acm-confirm-red" id="acaConfirmBtn" onclick="executeAcaClear()" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                    <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+                ล้างทั้งระบบ
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div class="admin-toast" id="adminToast">
+    <span class="admin-toast-icon" id="adminToastIcon"></span>
+    <span id="adminToastMsg"></span>
+</div>
+
+<style>
+/* ===== Admin Clear Modals ===== */
+.acm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.5);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+.acm-overlay.show { opacity: 1; pointer-events: all; }
+
+.acm-modal {
+    background: #fff;
+    border-radius: 22px;
+    padding: 2.25rem 2rem 2rem;
+    max-width: 380px; width: 100%;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.04);
+    text-align: center;
+    transform: scale(0.86) translateY(20px);
+    transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1);
+}
+.acm-overlay.show .acm-modal { transform: scale(1) translateY(0); }
+
+.acm-icon-wrap {
+    width: 68px; height: 68px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.25rem;
+}
+.acm-amber { background: linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; box-shadow: 0 8px 24px rgba(245,158,11,0.25); }
+.acm-red   { background: linear-gradient(135deg,#fee2e2,#fecaca); color:#ef4444; box-shadow: 0 8px 24px rgba(239,68,68,0.25); }
+
+.acm-title { font-size:1.05rem; font-weight:700; color:#111827; margin:0 0 0.25rem; letter-spacing:-0.01em; }
+.acm-username { font-size:1rem; font-weight:700; color:var(--primary-600,#2563eb); margin:0 0 0.6rem; }
+.acm-desc { font-size:0.845rem; color:#6b7280; line-height:1.65; margin:0 0 1.75rem; }
+.acm-desc strong { color:#374151; font-weight:600; }
+
+.acm-checkbox-wrap {
+    display: flex; align-items: flex-start; gap: 0.625rem;
+    background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: 10px; padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem; cursor: pointer; text-align: left;
+    font-size: 0.82rem; color: #991b1b; font-weight: 500; line-height: 1.4;
+}
+.acm-checkbox-wrap input[type=checkbox] { margin-top: 2px; flex-shrink: 0; accent-color: #ef4444; width:15px; height:15px; }
+
+.acm-actions { display:flex; gap:0.75rem; }
+.acm-btn {
+    flex: 1; padding: 0.725rem 1rem; border-radius: 11px;
+    font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none;
+    font-family: inherit; display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.4rem; transition: all 0.15s ease; line-height: 1;
+}
+.acm-cancel { background:#f3f4f6; color:#374151; border:1.5px solid #e5e7eb; }
+.acm-cancel:hover { background:#e5e7eb; }
+
+.acm-confirm-amber { background: linear-gradient(135deg,#f59e0b,#d97706); color:#fff; box-shadow: 0 4px 16px rgba(245,158,11,0.4); }
+.acm-confirm-amber:hover { background: linear-gradient(135deg,#fbbf24,#f59e0b); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,158,11,0.5); }
+.acm-confirm-amber:active { transform: scale(0.97); }
+
+.acm-confirm-red { background: linear-gradient(135deg,#ef4444,#dc2626); color:#fff; box-shadow: 0 4px 16px rgba(239,68,68,0.4); }
+.acm-confirm-red:hover:not(:disabled) { background: linear-gradient(135deg,#f87171,#ef4444); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(239,68,68,0.5); }
+.acm-confirm-red:active:not(:disabled) { transform: scale(0.97); }
+.acm-confirm-red:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+
+.acm-btn.loading { opacity:0.65; pointer-events:none; cursor:not-allowed; }
+.acm-spinner { width:14px; height:14px; border:2px solid rgba(255,255,255,0.35); border-top-color:#fff; border-radius:50%; animation:acm-spin 0.7s linear infinite; }
+@keyframes acm-spin { to { transform: rotate(360deg); } }
+
+/* ===== Toast ===== */
+.admin-toast {
+    position: fixed; bottom: 1.75rem; right: 1.75rem;
+    background: #111827; color: #fff;
+    padding: 0.875rem 1.25rem; border-radius: 14px;
+    font-size: 0.875rem; font-weight: 500;
+    z-index: 999999; display: flex; align-items: center; gap: 0.625rem;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none; max-width: 320px;
+}
+.admin-toast.show { transform: translateY(0); opacity: 1; }
+.admin-toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+</style>
 </body>
 </html>
