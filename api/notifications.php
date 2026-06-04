@@ -36,6 +36,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             markAllNotificationsAsRead($user['id']);
             echo json_encode(['success' => true]);
             break;
+
+        case 'dismiss':
+            $id = $data['id'] ?? 0;
+            if ($id) {
+                $result = dismissNotification($id, $user['id']);
+                echo json_encode(['success' => $result]);
+            } else {
+                echo json_encode(['error' => 'Invalid ID']);
+            }
+            break;
+
+        case 'clear_all':
+            $count = clearAllNotificationsForUser($user['id']);
+            echo json_encode(['success' => true, 'deleted' => $count]);
+            break;
+
+        case 'admin_clear_user':
+            if (hasRole('admin')) {
+                $targetUserId = intval($data['user_id'] ?? 0);
+                if ($targetUserId) {
+                    $count = clearAllNotificationsForUser($targetUserId);
+                    echo json_encode(['success' => true, 'deleted' => $count]);
+                } else {
+                    echo json_encode(['error' => 'User ID required']);
+                }
+            } else {
+                http_response_code(403);
+                echo json_encode(['error' => 'Forbidden']);
+            }
+            break;
         
         // Admin/System actions
         case 'notify_period_open':

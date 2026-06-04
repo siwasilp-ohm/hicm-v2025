@@ -159,6 +159,36 @@ function deleteOldNotifications($daysOld = 30) {
     }
 }
 
+/**
+ * Dismiss (permanently delete) a single notification owned by the given user
+ */
+function dismissNotification($notificationId, $userId) {
+    try {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("DELETE FROM notifications WHERE id = ? AND user_id = ?");
+        $stmt->execute([$notificationId, $userId]);
+        return $stmt->rowCount() > 0;
+    } catch (Exception $e) {
+        error_log("Error dismissing notification: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Clear (delete) all notifications for a user — for both user self-clear and admin override
+ */
+function clearAllNotificationsForUser($userId) {
+    try {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("DELETE FROM notifications WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        return $stmt->rowCount();
+    } catch (Exception $e) {
+        error_log("Error clearing notifications for user: " . $e->getMessage());
+        return 0;
+    }
+}
+
 // ============================================================
 // COMPANY NOTIFICATIONS - แจ้งเตือนสำหรับบริษัท
 // ============================================================
