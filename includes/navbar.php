@@ -518,6 +518,33 @@ $userRoleLabel = $roleLabels[$user['role']] ?? $user['role'];
     </div>
 </nav>
 
+<!-- ===== Notification Clear Confirm Modal ===== -->
+<div class="nc-overlay" id="notifClearModal" onclick="closeNotifConfirm(event)">
+    <div class="nc-modal" role="dialog" aria-modal="true" aria-labelledby="ncTitle">
+        <div class="nc-icon-wrap">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                <line x1="2" y1="2" x2="22" y2="22"/>
+            </svg>
+        </div>
+        <h3 class="nc-title" id="ncTitle">ล้างการแจ้งเตือนทั้งหมด?</h3>
+        <p class="nc-desc">การแจ้งเตือนทั้งหมดของคุณจะถูก<strong>ลบออกถาวร</strong><br>ไม่สามารถกู้คืนได้</p>
+        <div class="nc-actions">
+            <button class="nc-btn nc-cancel" onclick="closeNotifConfirm()">ยกเลิก</button>
+            <button class="nc-btn nc-confirm" id="ncConfirmBtn" onclick="executeNotifClear()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14H6L5 6"/>
+                    <path d="M10 11v6M14 11v6"/>
+                    <path d="M9 6V4h6v2"/>
+                </svg>
+                ล้างทั้งหมด
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
 /* ===== Notification Panel Pro ===== */
 
@@ -837,6 +864,126 @@ $userRoleLabel = $roleLabels[$user['role']] ?? $user['role'];
 .notification-content { flex: 1; min-width: 0; }
 .notification-title { font-size: 0.85rem; font-weight: 500; line-height: 1.3; margin-bottom: 2px; word-wrap: break-word; }
 .notification-time  { font-size: 0.75rem; color: var(--gray-500); }
+
+/* ===== Notification Clear Confirm Modal ===== */
+.nc-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+.nc-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+}
+.nc-modal {
+    background: #fff;
+    border-radius: 22px;
+    padding: 2.25rem 2rem 2rem;
+    max-width: 360px;
+    width: 100%;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.04);
+    text-align: center;
+    transform: scale(0.86) translateY(20px);
+    transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.nc-overlay.show .nc-modal {
+    transform: scale(1) translateY(0);
+}
+.nc-icon-wrap {
+    width: 68px;
+    height: 68px;
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #ef4444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.375rem;
+    box-shadow: 0 8px 24px rgba(239,68,68,0.2);
+}
+.nc-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.6rem;
+    letter-spacing: -0.01em;
+}
+.nc-desc {
+    font-size: 0.855rem;
+    color: var(--gray-500);
+    line-height: 1.65;
+    margin: 0 0 1.75rem;
+}
+.nc-desc strong {
+    color: var(--gray-700);
+    font-weight: 600;
+}
+.nc-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+.nc-btn {
+    flex: 1;
+    padding: 0.725rem 1rem;
+    border-radius: 11px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: all 0.15s ease;
+    line-height: 1;
+}
+.nc-cancel {
+    background: var(--gray-100, #f3f4f6);
+    color: var(--gray-700, #374151);
+    border: 1.5px solid var(--gray-200, #e5e7eb);
+}
+.nc-cancel:hover {
+    background: var(--gray-200, #e5e7eb);
+}
+.nc-confirm {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(239,68,68,0.4);
+}
+.nc-confirm:hover {
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    box-shadow: 0 6px 20px rgba(239,68,68,0.5);
+    transform: translateY(-1px);
+}
+.nc-confirm:active {
+    transform: scale(0.97) translateY(0);
+    box-shadow: 0 2px 8px rgba(239,68,68,0.35);
+}
+.nc-confirm.loading {
+    opacity: 0.65;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+.nc-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: nc-spin 0.7s linear infinite;
+}
+@keyframes nc-spin { to { transform: rotate(360deg); } }
 </style>
 
 <script>
@@ -945,8 +1092,25 @@ function markAllRead() {
 }
 
 function clearAllNotifications() {
-    if (!confirm('ล้างการแจ้งเตือนทั้งหมดของคุณ?\n\nการแจ้งเตือนทั้งหมดจะถูกลบออกถาวร')) return;
+    document.getElementById('notifClearModal').classList.add('show');
+    document.getElementById('notificationDropdown').classList.remove('show');
+}
+
+function closeNotifConfirm(event) {
+    if (event && event.target !== document.getElementById('notifClearModal')) return;
+    document.getElementById('notifClearModal').classList.remove('show');
+}
+
+function executeNotifClear() {
+    const btn = document.getElementById('ncConfirmBtn');
+    btn.classList.add('loading');
+    btn.innerHTML = '<span class="nc-spinner"></span> กำลังล้าง...';
+
     _apiPost({ action: 'clear_all' }).then(() => {
+        document.getElementById('notifClearModal').classList.remove('show');
+        btn.classList.remove('loading');
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg> ล้างทั้งหมด`;
+
         const list = document.getElementById('notificationList');
         if (list) {
             list.innerHTML = `
@@ -960,10 +1124,15 @@ function clearAllNotifications() {
                 </div>`;
         }
         NotificationManager.setUnreadCount(0);
+        NotificationManager._footerCount = 0;
         const fc = document.getElementById('notifFooterCount');
         if (fc) fc.textContent = '';
     });
 }
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.getElementById('notifClearModal')?.classList.remove('show');
+});
 
 // ---- Internal helpers ----
 
