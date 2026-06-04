@@ -840,9 +840,10 @@ $companySizes = getCompanySizes();
                                             <button class="btn btn-sm btn-outline-primary px-3 rounded-lg border-primary-100 hover:bg-primary-50" onclick="editUser(<?php echo htmlspecialchars(json_encode($user)); ?>)" title="แก้ไขข้อมูล">
                                                 <i class="fas fa-edit mr-1"></i> แก้ไข
                                             </button>
-                                            <button class="btn btn-sm px-2 rounded-lg" onclick="adminClearNotifications(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['name']); ?>')" title="ล้างการแจ้งเตือนของผู้ใช้นี้"
-                                                style="border:1px solid var(--warning-300,#fcd34d);color:var(--warning-700,#b45309);background:var(--warning-50,#fffbeb);">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                                            <button class="btn btn-sm px-2 rounded-lg d-flex align-items-center gap-1" onclick="adminClearNotifications(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['name']); ?>')" title="ล้างการแจ้งเตือนทั้งหมดของผู้ใช้นี้"
+                                                style="border:1px solid #fbbf24;color:#92400e;background:#fef3c7;font-size:0.78rem;font-weight:500;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                                                ล้างแจ้งเตือน
                                             </button>
                                             <?php if ($user['id'] != $_SESSION['user_id']): ?>
                                                 <button class="btn btn-sm btn-outline-danger px-2 rounded-lg border-danger-100 hover:bg-danger-50" onclick="deleteUser(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['name']); ?>')" title="ลบผู้ใช้">
