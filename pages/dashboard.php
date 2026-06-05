@@ -2999,7 +2999,7 @@ function adjustBrightness($hex, $percent) {
                         $pillarConfig = [
                             'H1' => ['name' => 'สุขภาพ', 'color' => '#10B981', 'bg' => '#D1FAE5', 'max' => 250],
                             'I2' => ['name' => 'ความปลอดภัย', 'color' => '#3B82F6', 'bg' => '#DBEAFE', 'max' => 250],
-                            'C3' => ['name' => 'บุคลากร', 'color' => '#F59E0B', 'bg' => '#FEF3C7', 'max' => 250],
+                            'C3' => ['name' => 'การมีส่วนร่วมกับชุมชน', 'color' => '#F59E0B', 'bg' => '#FEF3C7', 'max' => 250],
                             'M4' => ['name' => 'การบริหาร', 'color' => '#8B5CF6', 'bg' => '#EDE9FE', 'max' => 250]
                         ];
                         $pillarsData = $assessment['pillars'] ?? [];
